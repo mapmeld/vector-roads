@@ -27,11 +27,26 @@ function CustomDrawFunction(feature, canvasctx) {
   var p2;
   for (var pt = 1; pt < coords.length; pt+=2) {
     p2 = coords[pt];
-    if (!lastDrawnPoint || distance(lastDrawnPoint, p1) > lastDrawnDistance) {
-      lastDrawnPoint = p1;
-      lastDrawnDistance = canvasctx.measureText(feature.properties.name).width;
+
+    var m = (p2.y - p1.y) / (p2.x - p1.x + 0.000001);
+    var b = p1.y - (p1.x * m);
+
+    var roadDist = distance(p1, p2);
+    var labelDist = canvasctx.measureText(feature.properties.name).width;
+    if (p2.x < p1.x) {
+      var p3 = p1;
+      p1 = p2;
+      p2 = p3;
     }
-    drawLabel(canvasctx, feature.properties.name, p1, p2);
+    
+    var segments = roadDist / labelDist;
+    for (var i = 0; i < segments; i++) {
+      var newx = p1.x + ((p2.x - p1.x) * i / segments);
+      var p12 = { x: newx, y: m * newx + b };
+      var newx2 = p1.x + ((p2.x - p1.x) * (i + 1) / segments);
+      var p22 = { x: newx2, y: m * newx2 + b };
+      drawLabel(canvasctx, feature.properties.name, p12, p22);
+    }
     p1 = p2;
   }
 }
